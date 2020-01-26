@@ -97,8 +97,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 10
     },
     textLink: {
-        color: 'blue',
-        textDecorationLine: 'underline'
+        color: 'blue'
     },
     facebookActionButton: {
         backgroundColor: '#2b78e4',

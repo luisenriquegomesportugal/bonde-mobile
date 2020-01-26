@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     textLink: {
-        color: 'blue',
-        textDecorationLine: 'underline'
+        color: 'blue'
     }
 });

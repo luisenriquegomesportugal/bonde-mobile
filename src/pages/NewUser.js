@@ -1,16 +1,25 @@
-import React, { useCallback } from 'react';
-import { View, Text, ScrollView, SafeAreaView, Image, StyleSheet, KeyboardAvoidingView, TouchableOpacity, Platform, TextInput } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+    View,
+    Text,
+    ScrollView,
+    SafeAreaView,
+    Image,
+    StyleSheet,
+    KeyboardAvoidingView,
+    TouchableOpacity,
+    Platform,
+    TextTextInput
+} from 'react-native';
 
-import { FontAwesome } from '@expo/vector-icons';
-import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { FontAwesome } from '@expo/vector-icons';
 
-import Input from '../components/Input';
+import TextInput from '../components/TextInput';
 import ButtonForm from '../components/Button/Form';
-
 import logo from '../assets/logo-large.png';
 
-const validationSchema = Yup.object().shape({
+const schema = Yup.object().shape({
     firstName: Yup.string('Nome é obrigatório').required('Nome é obrigatório').max(255, "Nome acima do permitido"),
     lastName: Yup.string('Sobrenome é obrigatório').required('Sobrenome é obrigatório').max(255, "Sobrenome acima do permitido"),
     email: Yup.string('Email é obrigatório').required('Email é obrigatório').email('Email está inválido'),
@@ -20,22 +29,47 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function NewUser({ navigation }) {
-    const onAlreadyUserTextPress = useCallback(() => navigation.navigate('Login'), []);
+    const [values, setValues] = useState({});
+    const [erros, setValues] = useState({});
 
-    const { handleChange, handleBlur, handleSubmit, values, errors, touched } = useFormik({
-        validationSchema,
-        validateOnChange: false,
-        initialValues: {
-            firstName: '',
-            lastName: '',
-            email: '',
-            password: '',
-            passwordConfirm: ''
-        },
-        onSubmit: values => {
-            alert(JSON.stringify(values));
-        },
-    });
+    const onAlreadyUserTextPress = useCallback(() => navigation.navigate('Login'), []);
+    const handleChange = useCallback(name => text => setValues(old => ({ ...old, [name]: text })), []);
+    const handleSubmit = useCallback(e => {
+        e.preventDefault();
+
+        let data = parseFormData();
+
+        try {
+            if (schema) {
+                await schema.validate(data, {
+                    abortEarly: false,
+                    stripUnknown: true,
+                    context,
+                });
+
+                data = schema.cast(data, {
+                    stripUnknown: true,
+                    context,
+                });
+            }
+
+            setErrors({});
+            onSubmit(data, { resetForm });
+        } catch (err) {
+            const validationErrors = {};
+
+            /* istanbul ignore next  */
+            if (!err.inner) {
+                throw err;
+            }
+
+            err.inner.forEach((error: ValidationError) => {
+                validationErrors[error.path] = error.message;
+            });
+
+            setErrors(validationErrors);
+        }
+    }, []);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -45,70 +79,60 @@ export default function NewUser({ navigation }) {
                         <Image source={logo} />
                     </View>
                     <View style={styles.actionsContainer}>
-                        <Input
+                        <TextInput
                             placeholder="Nome"
                             autoCapitalize="words"
                             autoCorrect={false}
                             autoCompleteType="name"
                             multiline={false}
-                            error={errors.firstName}
                             onChangeText={handleChange('firstName')}
-                            onBlur={handleBlur('firstName')}
                             value={values.firstName}
                         />
-                        <Input
+                        <TextInput
                             placeholder="Sobrenome"
                             autoCapitalize="words"
                             autoCorrect={false}
                             autoCompleteType="name"
                             multiline={false}
-                            error={touched.lastName && errors.lastName}
                             onChangeText={handleChange('lastName')}
-                            onBlur={handleBlur('lastName')}
                             value={values.lastName}
                         />
-                        <Input
+                        <TextInput
                             placeholder="Email"
                             autoCapitalize="none"
                             autoCorrect={false}
                             autoCompleteType="email"
                             keyboardType="email-address"
                             multiline={false}
-                            error={errors.email}
                             onChangeText={handleChange('email')}
-                            onBlur={handleBlur('email')}
                             value={values.email}
                         />
-                        <Input
+                        <TextInput
                             placeholder="Senha"
                             autoCorrect={false}
                             autoCompleteType="password"
                             secureTextEntry={true}
                             multiline={false}
-                            error={errors.password}
                             onChangeText={handleChange('password')}
-                            onBlur={handleBlur('password')}
                             value={values.password}
                         />
-                        <Input
+                        <TextInput
                             placeholder="Confimação de senha"
                             autoCorrect={false}
                             autoCompleteType="password"
                             secureTextEntry={true}
                             multiline={false}
-                            error={errors.passwordConfirm}
                             onChangeText={handleChange('passwordConfirm')}
-                            onBlur={handleBlur('passwordConfirm')}
                             value={values.passwordConfirm}
                         />
                         <ButtonForm
                             onPress={handleSubmit}
                             icon={<FontAwesome name="user-plus" size={24} />}>
                             Vamos lá
-                            </ButtonForm>
+                        </ButtonForm>
                         <Text style={styles.textLink} onPress={onAlreadyUserTextPress}>
                             Já possui uma conta?
-                            </Text>
+                        </Text>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -136,7 +160,6 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     textLink: {
-        color: 'blue',
-        textDecorationLine: 'underline'
+        color: 'blue'
     }
 });
